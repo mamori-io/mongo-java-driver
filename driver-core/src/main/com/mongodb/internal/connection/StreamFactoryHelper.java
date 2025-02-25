@@ -19,6 +19,7 @@ package com.mongodb.internal.connection;
 import com.mongodb.MongoClientException;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.connection.AsyncTransportSettings;
+import com.mongodb.connection.CustomTransportSettings;
 import com.mongodb.connection.NettyTransportSettings;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.TransportSettings;
@@ -43,6 +44,9 @@ public final class StreamFactoryHelper {
             throw new MongoClientException("Unsupported transport settings in sync: " + transportSettings.getClass().getName());
         } else if (transportSettings instanceof NettyTransportSettings) {
             return getNettyStreamFactoryFactory(inetAddressResolver, (NettyTransportSettings) transportSettings)
+                    .create(socketSettings, settings.getSslSettings());
+        } else if(transportSettings instanceof CustomTransportSettings) {
+            return getCustomStreamFactoryFactory(inetAddressResolver, (CustomTransportSettings) transportSettings)
                     .create(socketSettings, settings.getSslSettings());
         } else {
             throw new MongoClientException("Unsupported transport settings: " + transportSettings.getClass().getName());
@@ -70,9 +74,15 @@ public final class StreamFactoryHelper {
             return new AsynchronousSocketChannelStreamFactoryFactory(inetAddressResolver, group);
         } else  if (transportSettings instanceof NettyTransportSettings) {
             return getNettyStreamFactoryFactory(inetAddressResolver, (NettyTransportSettings) transportSettings);
+        } else if (transportSettings instanceof CustomTransportSettings) {
+            return getCustomStreamFactoryFactory(inetAddressResolver, (CustomTransportSettings) transportSettings);
         } else {
             throw new MongoClientException("Unsupported transport settings: " + transportSettings.getClass().getName());
         }
+    }
+
+    private static StreamFactoryFactory getCustomStreamFactoryFactory(InetAddressResolver inetAddressResolver, CustomTransportSettings transportSettings) {
+        return transportSettings.getStreamFactoryFactory(inetAddressResolver);
     }
 
     private static NettyStreamFactoryFactory getNettyStreamFactoryFactory(final InetAddressResolver inetAddressResolver,
