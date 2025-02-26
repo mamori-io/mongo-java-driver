@@ -17,6 +17,7 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.MongoClientException;
+import com.mongodb.connection.CustomTransportSettings;
 import com.mongodb.connection.NettyTransportSettings;
 import com.mongodb.connection.TransportSettings;
 import com.mongodb.internal.connection.netty.NettyStreamFactoryFactory;
@@ -32,6 +33,8 @@ public final class StreamFactoryHelper {
             return NettyStreamFactoryFactory.builder().applySettings((NettyTransportSettings) transportSettings)
                     .inetAddressResolver(inetAddressResolver)
                     .build();
+        } else if(transportSettings instanceof CustomTransportSettings) {
+            return ((CustomTransportSettings) transportSettings).getStreamFactoryFactory(inetAddressResolver);
         } else {
             throw new MongoClientException("Unsupported transport settings: " + transportSettings.getClass().getName());
         }
